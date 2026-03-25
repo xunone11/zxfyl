@@ -1,73 +1,52 @@
-#!/bin/bash
-# ========================================
-# 张雪峰升学规划AI - 一键训练脚本
-# 适用于 AutoDL 等云端训练平台
-# GPU推荐: RTX 4090 24GB
-# ========================================
+# 张雪峰升学规划AI - QLoRA微调训练包
 
-set -e
+## 推荐配置
+- **GPU**: RTX 4090 24GB (AutoDL ¥1.98/时)
+- **显存占用**: ~20GB (QLoRA 4-bit)
+- **总花费**: ¥1-2
 
-WORK_DIR="$(cd "$(dirname "$0")" && pwd)"
-# 模型和输出保存到AutoDL持久存储，关机不丢失
-MODEL_DIR="/root/autodl-fs/model/Qwen2.5-7B-Instruct"
-OUTPUT_DIR="/root/autodl-fs/lora_output"
-MERGED_DIR="/root/autodl-fs/merged_model"
+## 一键启动
 
-echo "======================================"
-echo "  张雪峰升学规划AI - QLoRA微调"
-echo "======================================"
-echo "工作目录: $WORK_DIR"
-echo ""
+```bash
+# 上传本目录到服务器后，执行：
+cd /root/训练包
+bash 一键启动.sh
+```
 
-# ========== 第1步：安装依赖 ==========
-echo "[步骤1/4] 安装依赖..."
-pip install llamafactory bitsandbytes modelscope -q
-echo "✓ 依赖安装完成"
+脚本会自动完成：安装依赖 → 下载模型 → 开始训练 → 合并导出
 
-# ========== 第2步：下载模型 ==========
-if [ -f "$MODEL_DIR/config.json" ]; then
-    echo "[步骤2/4] 模型已存在，跳过下载"
-else
-    echo "[步骤2/4] 下载 Qwen2.5-7B-Instruct 模型（约15GB）..."
-    modelscope download --model Qwen/Qwen2.5-7B-Instruct --local_dir "$MODEL_DIR"
-    echo "✓ 模型下载完成"
-fi
+## 文件说明
 
-# ========== 第3步：更新配置中的路径 ==========
-echo "[步骤3/4] 更新配置路径..."
-sed -i "s|model_name_or_path:.*|model_name_or_path: $MODEL_DIR|" "$WORK_DIR/train_qlora.yaml"
-sed -i "s|dataset_dir:.*|dataset_dir: $WORK_DIR|" "$WORK_DIR/train_qlora.yaml"
-sed -i "s|output_dir:.*|output_dir: $OUTPUT_DIR|" "$WORK_DIR/train_qlora.yaml"
-echo "✓ 配置已更新"
+| 文件 | 说明 |
+|------|------|
+| `一键启动.sh` | 一键安装+训练+导出脚本 |
+| `train_qlora.yaml` | QLoRA微调配置（Qwen2.5-7B + LoRA rank16） |
+| `dataset_info.json` | LLaMA-Factory数据集注册 |
+| `train_data_b.json` | 2445条高质量QA训练集（主数据集） |
+| `train_data_a.json` | 1254条备用数据集 |
+| `导出模型.py` | 训练完成后合并LoRA权重到完整模型 |
 
-# ========== 第4步：开始训练 ==========
-echo "[步骤4/4] 开始QLoRA微调训练..."
-echo "训练配置:"
-echo "  模型: Qwen2.5-7B-Instruct"
-echo "  方法: QLoRA (4-bit)"
-echo "  LoRA rank: 16"
-echo "  Epochs: 3"
-echo "  Batch: 2 x 8 = 16"
-echo ""
+## 训练完成后
 
-llamafactory-cli train "$WORK_DIR/train_qlora.yaml"
+训练完成后会在持久存储中生成：
+- `/root/autodl-fs/lora_output/` - LoRA权重文件（几十MB）
+- `/root/autodl-fs/merged_model/` - 合并后的完整模型（约15GB）
 
-echo ""
-echo "======================================"
-echo "  ✓ 训练完成！"
-echo "======================================"
-echo ""
+**下载 `merged_model/` 目录到本地**，即可用 Ollama 部署。
+关机后这些文件仍保留在 autodl-fs 中。
 
-# ========== 第5步：合并导出 ==========
-echo "[额外] 合并LoRA权重到完整模型..."
-python "$WORK_DIR/导出模型.py" \
-    --model_dir "$MODEL_DIR" \
-    --lora_dir "$OUTPUT_DIR" \
-    --output_dir "$MERGED_DIR"
+## 手动执行（如果一键脚本有问题）
 
-echo ""
-echo "======================================"
-echo "  全部完成！"
-echo "  LoRA权重: $OUTPUT_DIR"
-echo "  合并模型: $MERGED_DIR"
-echo "======================================"
+```bash
+# 1. 安装依赖
+pip install llamafactory bitsandbytes modelscope
+
+# 2. 下载模型
+modelscope download --model Qwen/Qwen2.5-7B-Instruct --local_dir /root/autodl-fs/model/Qwen2.5-7B-Instruct
+
+# 3. 开始训练
+llamafactory-cli train train_qlora.yaml
+
+# 4. 合并导出
+python 导出模型.py --model_dir /root/autodl-fs/model/Qwen2.5-7B-Instruct --lora_dir /root/autodl-fs/lora_output --output_dir /root/autodl-fs/merged_model
+```
