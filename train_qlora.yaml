@@ -1,0 +1,51 @@
+### QLoRA 微调配置 - 张雪峰升学规划AI
+### 适配 RTX 4090 24GB（云端训练）
+### 路径会被 一键启动.sh 自动替换
+
+### 模型配置
+model_name_or_path: /root/autodl-fs/model/Qwen2.5-7B-Instruct
+trust_remote_code: true
+
+### 训练方法
+stage: sft
+do_train: true
+finetuning_type: lora
+
+### LoRA 配置
+lora_target: all
+lora_rank: 16
+lora_alpha: 32
+lora_dropout: 0.05
+
+### 量化配置 (QLoRA - 4bit)
+quantization_bit: 4
+quantization_method: bitsandbytes
+
+### 数据集配置
+dataset_dir: ./
+dataset: zhangxuefeng
+template: qwen
+cutoff_len: 2048
+
+### 训练超参数
+per_device_train_batch_size: 4
+gradient_accumulation_steps: 4
+learning_rate: 2.0e-4
+num_train_epochs: 3
+lr_scheduler_type: cosine
+warmup_ratio: 0.1
+max_grad_norm: 1.0
+logging_steps: 5
+save_steps: 100
+save_total_limit: 3
+
+### 优化器
+optim: paged_adamw_32bit
+
+### 输出目录
+output_dir: /root/autodl-fs/lora_output
+overwrite_output_dir: true
+
+### 其他
+bf16: true
+report_to: none

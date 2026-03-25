@@ -1,0 +1,12 @@
+{
+  "zhangxuefeng": {
+    "file_name": "train_data_b.json",
+    "formatting": "alpaca",
+    "columns": {
+      "prompt": "instruction",
+      "query": "input",
+      "response": "output",
+      "system": "system"
+    }
+  }
+}
