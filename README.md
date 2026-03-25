@@ -50,3 +50,11 @@ llamafactory-cli train train_qlora.yaml
 # 4. 合并导出
 python 导出模型.py --model_dir /root/autodl-fs/model/Qwen2.5-7B-Instruct --lora_dir /root/autodl-fs/lora_output --output_dir /root/autodl-fs/merged_model
 ```
+
+
+## 注意事项
+
+# 1. AutoDL有内置的学术加速代理。你现在直接在服务器终端执行这条命令，立刻加速：
+source /etc/network_turbo
+# 2.清华源安装依赖
+pip install llamafactory bitsandbytes modelscope -i https://pypi.tuna.tsinghua.edu.cn/simple
