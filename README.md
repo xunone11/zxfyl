@@ -58,3 +58,7 @@ python 导出模型.py --model_dir /root/autodl-fs/model/Qwen2.5-7B-Instruct --l
 source /etc/network_turbo
 # 2.清华源安装依赖
 pip install llamafactory bitsandbytes modelscope -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+# 3.# 用screen后台运行，SSH断了也不怕
+screen -S train
+cd /root/训练包 && bash 一键启动.sh
